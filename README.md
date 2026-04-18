@@ -8,7 +8,7 @@ authentication/authorization, while MongoDB is perfect for tasks because of its 
 ## Tech Stack
 Node.js, Express.js, PostgreSQL (for users), MongoDB (for tasks), JWT for authentication.
 
-## Local PC Setup & Installation Guide
+## How to Set Up and Run the Application Locally (Including Database Setup)
 
 ### Prerequisites
 Make sure you have the following installed on your machine:
@@ -45,7 +45,7 @@ Ensure the MongoDB and PostgreSQL services are running natively in the backgroun
 npm run dev
 ```
 
-5. View Documentation:
+**5. View Documentation:**
 Open `http://localhost:5000/api-docs` in your browser.
 
 ## API Documentation
