@@ -8,32 +8,39 @@ authentication/authorization, while MongoDB is perfect for tasks because of its 
 ## Tech Stack
 Node.js, Express.js, PostgreSQL (for users), MongoDB (for tasks), JWT for authentication.
 
-## Setup & Run
+## Local PC Setup & Installation Guide
 
 ### Prerequisites
-- Node.js (v18+)
-- PostgreSQL
-- MongoDB
+Make sure you have the following installed on your machine:
+- **Node.js** (v18+): [Download & Install](https://nodejs.org/)
+- **PostgreSQL**: [Download & Install](https://www.postgresql.org/download/windows/). During installation, remember the password you set for the default `postgres` user.
+- **MongoDB**: [Download & Install Community Server](https://www.mongodb.com/try/download/community). It is also recommended to install MongoDB Compass for a GUI.
 
-### Steps
+### Step-by-Step Execution
 
-1. Install dependencies:
+**1. Install project dependencies:**
+Open terminal in the project directory and run:
 ```bash
 npm install
 ```
 
-2. Setup Environment Variables:
-Copy `.env.example` to `.env` and fill in your database credentials:
+**2. Configure Environment Variables:**
+You need an environment file to store your database credentials. 
+Copy the `.env.example` file and rename it to `.env`:
 ```bash
 copy .env.example .env
 ```
-Make sure `POSTGRES_PASSWORD`, `POSTGRES_DB`, and `MONGO_URI` are correct for your local setup.
+Open the `.env` file in your code editor. Make sure `POSTGRES_PASSWORD` matches the one you set when installing PostgreSQL, and check that `MONGO_URI` is correct for your local setup.
 
-3. Create the PostgreSQL Database:
-Connect to your PostgreSQL server and create the database you specified in `.env` (e.g. `taskmanager`).
-(The tables will be created automatically when the server starts).
+**3. Create the PostgreSQL Database:**
+Before starting the application, you need to initialize the PostgreSQL database.
+1. Open **pgAdmin** (which installs alongside PostgreSQL) or the `psql` command-line tool.
+2. Login with your `postgres` user.
+3. Right-click Databases -> Create -> Database... and name it `taskmanager` (or whatever name you set for `POSTGRES_DB` in your `.env` file).
+*Note: You do not need to manually create the tables. The tables will be synced and created automatically by Sequelize/TypeORM when the server starts.*
 
-4. Start the server:
+**4. Start the Application Server:**
+Ensure the MongoDB and PostgreSQL services are running natively in the background on your PC. Then, start the development server:
 ```bash
 npm run dev
 ```
