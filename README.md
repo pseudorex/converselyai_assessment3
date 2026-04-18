@@ -71,7 +71,7 @@ For a comprehensive breakdown of all endpoints, complete with JSON payload examp
 - `PATCH /api/tasks/:id` - Update a task
 - `DELETE /api/tasks/:id` - Delete a task
 
-## Folder Structure & Design Decisions
+## Explanation of Chosen Folder Structure and Design Decisions
 
 ### Folder Structure
 The application follows a feature-based (modular) architecture under the `src` directory:
