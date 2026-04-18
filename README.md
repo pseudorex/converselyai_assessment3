@@ -50,22 +50,26 @@ Open `http://localhost:5000/api-docs` in your browser.
 
 ## API Documentation
 
-I have set up Swagger UI for testing the API. You can access it at `GET /api-docs`.
+I have provided two ways to view the API documentation for this assessment:
 
-### Authentication
-You need to authenticate to use the task routes.
-1. `POST /api/auth/register` to create an account
-2. `POST /api/auth/login` to get a JWT token
-3. Click "Authorize" in Swagger UI and enter `Bearer <your_token>`
+**1. Swagger UI (Interactive Viewer):**
+You can access the auto-generated live Swagger documentation at `GET /api-docs` when the server is running. This acts as both documentation and an interactive testing client.
 
-### Task Routes
+**2. Detailed Plain-Text Documentation:**
+For a comprehensive breakdown of all endpoints, complete with JSON payload examples, headers, and expected response objects, please read the dedicated [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) file included in this repository.
+
+### Quick Route Overview
+
+**Authentication Endpoints:**
+- `POST /api/auth/register` - Create an account
+- `POST /api/auth/login` - Get a JWT token
+
+**Task Endpoints (Requires Auth Token):**
 - `POST /api/tasks` - Create a task
 - `GET /api/tasks` - Get all your tasks
 - `GET /api/tasks/:id` - Get a single task
 - `PATCH /api/tasks/:id` - Update a task
 - `DELETE /api/tasks/:id` - Delete a task
-
-Note: You can only access tasks that belong to your user account.
 
 ## Folder Structure & Design Decisions
 
