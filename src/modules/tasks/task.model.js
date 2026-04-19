@@ -28,6 +28,15 @@ const taskSchema = new mongoose.Schema(
       },
       default: 'pending',
     },
+    category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Category',
+      default: null,
+    },
+    tags: {
+      type: [String],
+      default: [],
+    },
     userId: {
       type: Number, // references PostgreSQL users.id
       required: true,

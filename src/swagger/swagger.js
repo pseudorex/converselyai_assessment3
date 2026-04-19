@@ -38,6 +38,9 @@ const options = {
   apis: [
     './src/modules/auth/auth.routes.js',
     './src/modules/tasks/task.routes.js',
+    './src/modules/categories/category.routes.js',
+    './src/modules/tags/tag.routes.js',
+    './src/modules/webhook/webhook.routes.js',
   ],
 };
 

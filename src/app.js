@@ -9,6 +9,9 @@ const swaggerSpec = require('./swagger/swagger');
 
 const authRoutes = require('./modules/auth/auth.routes');
 const taskRoutes = require('./modules/tasks/task.routes');
+const categoryRoutes = require('./modules/categories/category.routes');
+const tagRoutes = require('./modules/tags/tag.routes');
+const webhookRoutes = require('./modules/webhook/webhook.routes');
 const { errorHandler } = require('./middleware/error.middleware');
 
 const app = express();
@@ -30,9 +33,12 @@ app.use(
   })
 );
 
-// Routes for authentication and tasks
+// Routes for authentication, tasks, categories, tags, and webhook receiver
 app.use('/api/auth', authRoutes);
+app.use('/api/categories', categoryRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api/tags', tagRoutes);
+app.use('/api/webhook', webhookRoutes);
 
 // Handle 404 Not Found
 app.use((req, res) => {

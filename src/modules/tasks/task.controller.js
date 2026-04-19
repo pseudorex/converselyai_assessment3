@@ -1,6 +1,8 @@
 'use strict';
 
 const Task = require('./task.model');
+const { agenda } = require('../../config/agenda');
+const { cancelTaskReminder, scheduleTaskReminder } = require('../../services/reminder.service');
 
 // Helper functions for errors
 
@@ -23,15 +25,29 @@ function forbidden() {
  * Creates a new task for the authenticated user
  */
 async function createTask(req, res) {
-  const { title, description, dueDate, status } = req.body;
+  const { title, description, dueDate, status, category, tags } = req.body;
 
   const task = await Task.create({
     title,
     description,
     dueDate: dueDate || null,
     status: status || 'pending',
+    category: category || null,
+    tags: tags || [],
     userId: req.user.id,
   });
+
+  await scheduleTaskReminder(task);
+
+  if (task.status === 'completed') {
+    await agenda.now('send completed webhook', {
+      taskId: task._id.toString(),
+      title: task.title,
+      completedAt: new Date(),
+      userId: req.user.id,
+      retryCount: 0,
+    });
+  }
 
   res.status(201).json({
     status: 'success',
@@ -47,8 +63,20 @@ async function createTask(req, res) {
  * TODO: Add filtering by status (e.g., ?status=completed)
  */
 async function getAllTasks(req, res) {
+  const { category, tags } = req.query;
+  const filter = { userId: req.user.id };
+
+  if (category) {
+    filter.category = category;
+  }
+
+  if (tags) {
+    const tagsArray = tags.split(',').map((t) => t.trim());
+    filter.tags = { $all: tagsArray };
+  }
+
   // Find all tasks where userId matches the authenticated user
-  const tasks = await Task.find({ userId: req.user.id }).sort({ createdAt: -1 });
+  const tasks = await Task.find(filter).sort({ createdAt: -1 });
 
   res.status(200).json({
     status: 'success',
@@ -85,9 +113,24 @@ async function updateTask(req, res) {
   if (!task) throw notFound();
   if (task.userId !== req.user.id) throw forbidden();
 
+  const statusChangedToCompleted = req.body.status === 'completed' && task.status !== 'completed';
+
   // Apply only the fields sent in the request
   Object.assign(task, req.body);
   await task.save();
+
+  await cancelTaskReminder(task._id.toString());
+  await scheduleTaskReminder(task);
+
+  if (statusChangedToCompleted) {
+    await agenda.now('send completed webhook', {
+      taskId: task._id.toString(),
+      title: task.title,
+      completedAt: new Date(),
+      userId: req.user.id,
+      retryCount: 0,
+    });
+  }
 
   res.status(200).json({
     status: 'success',
@@ -106,6 +149,7 @@ async function deleteTask(req, res) {
   if (!task) throw notFound();
   if (task.userId !== req.user.id) throw forbidden();
 
+  await cancelTaskReminder(task._id.toString());
   await task.deleteOne();
 
   res.status(200).json({

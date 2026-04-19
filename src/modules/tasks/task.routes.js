@@ -42,6 +42,15 @@ const {
  *           type: string
  *           enum: [pending, completed]
  *           example: pending
+ *         category:
+ *           type: string
+ *           nullable: true
+ *           example: 661f1c2e8a1b2c3d4e5f6789
+ *         tags:
+ *           type: array
+ *           items:
+ *             type: string
+ *           example: ["Work", "Urgent"]
  *         userId:
  *           type: integer
  *           example: 1
@@ -83,6 +92,14 @@ const {
  *                 type: string
  *                 enum: [pending, completed]
  *                 example: pending
+ *               category:
+ *                 type: string
+ *                 example: 661f1c2e8a1b2c3d4e5f6789
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["Work", "Urgent"]
  *     responses:
  *       201:
  *         description: Task created
@@ -105,6 +122,17 @@ router.post('/', authenticate, validate(createTaskSchema), createTask);
  *     tags: [Tasks]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: Category ID to filter tasks
+ *       - in: query
+ *         name: tags
+ *         schema:
+ *           type: string
+ *         description: Comma-separated tags to filter tasks (example: tags=Urgent,ClientA)
  *     responses:
  *       200:
  *         description: List of tasks
@@ -171,6 +199,12 @@ router.get('/:id', authenticate, getTaskById);
  *               status:
  *                 type: string
  *                 enum: [pending, completed]
+ *               category:
+ *                 type: string
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
  *     responses:
  *       200:
  *         description: Updated task
