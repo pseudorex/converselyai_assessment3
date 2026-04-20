@@ -19,8 +19,12 @@ const agenda = new Agenda({
 });
 
 async function writeReminderLog(message) {
-  const timestamp = new Date().toISOString();
-  await appendFile(REMINDERS_LOG_PATH, `[${timestamp}] ${message}\n`);
+  // Format the timestamp for IST (GMT+5:30)
+  const timestamp = new Date().toLocaleString('en-US', {
+    timeZone: 'Asia/Kolkata',
+    hour12: false,
+  });
+  await appendFile(REMINDERS_LOG_PATH, `[${timestamp} IST] ${message}\n`);
 }
 
 agenda.define('send task reminder', async (job) => {

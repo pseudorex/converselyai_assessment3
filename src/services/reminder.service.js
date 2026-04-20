@@ -12,6 +12,9 @@ async function scheduleTaskReminder(task) {
   }
 
   const now = new Date();
+  const currentIST = now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata', hour12: false });
+  console.log(`[SCHEDULE] System time (IST): ${currentIST}`);
+
   const reminderTime = new Date(task.dueDate.getTime() - 60 * 60 * 1000);
 
   if (task.dueDate <= now) {
