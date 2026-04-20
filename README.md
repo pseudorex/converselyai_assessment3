@@ -48,17 +48,12 @@ This is a comprehensive Task Management REST API built for the Conversely AI int
 ---
 
 ## Folder Structure
-The application follows a **feature-based (modular) architecture** under the `src` directory, ensuring high cohesion and scalability:
+The application follows a **feature-based (modular) architecture** under the `src` directory:
 
 - `src/config/`: Database connection logic (MongoDB, PostgreSQL) and Agenda/JWT configurations.
-- `src/middleware/`: Global middlewares (auth protection, centralized error handling, Joi validation).
-- `src/services/`: Cross-cutting business logic (e.g., `reminder.service.js` for scheduling logic).
-- `src/modules/`: Business domains, isolated by feature:
-  - `auth/`: User registration, login, and profile management.
-  - `tasks/`: Core CRUD operations, filtering, and status updates.
-  - `categories/`: Dynamic category management.
-  - `tags/`: Free-form tag management.
-  - `webhook/`: Simulated external receiver for testing notifications.
+- `src/middleware/`: Global middlewares (auth protection, centralised error handling, validation).
+- `src/services/`: Cross-cutting business logic (e.g., `reminder.service.js`).
+- `src/modules/`: Business domains, isolated by feature (auth, tasks, categories, tags, webhook).
 - `src/swagger/`: Swagger/OpenAPI specifications.
 - `app.js` / `server.js`: Entry points for Express configuration and server initiation.
 
@@ -79,17 +74,34 @@ Once the server is running, visit:
 | **Tasks** | List/Filter | `GET /api/tasks?category=ID&tags=work,urgent` |
 | **Tasks** | Create | `POST /api/tasks` |
 | **Tasks** | Update | `PATCH /api/tasks/:id` |
-| **Categories** | List | `GET /api/categories` |
-| **Categories** | Create | `POST /api/categories` |
-| **Tags** | List | `GET /api/tags` |
-| **Webhook** | Receive | `POST /api/webhook/receive` (Testing endpoint) |
+| **Tasks** | Delete | `DELETE /api/tasks/:id` |
+| **Categories** | List / Create | `GET/POST /api/categories` |
+| **Categories** | Edit / Delete | `PATCH/DELETE /api/categories/:id` |
+| **Tags** | List / Create | `GET/POST /api/tags` |
 
 ---
 
-## Design Decisions
+## Technical Design & Architectural Choices
 
-1.  **Polyglot Persistence**: PostgreSQL handles `User` accounts for robust security and ACID compliance. MongoDB handles `Tasks` to allow for a flexible document schema where tags and categories can evolve without strict migration overhead.
-2.  **Feature-Based Modules**: Organizing by domain (e.g., `auth`, `tasks`) rather than by role (e.g., `controllers`, `routes`) keeps code related to a single feature tightly coupled, which scales significantly better.
-3.  **Agenda.js for Reliability**: We use a database-backed queue (Agenda) for task reminders. This ensures that scheduled notifications persist through server restarts, unlike in-memory `setTimeout` solutions.
-4.  **Exponential Backoff Retry**: Webhook deliveries use a strategy of 3 retries with doubling wait times to ensure reliability against intermittent network instability.
-5.  **Centralised Error Handling**: A universal wrapper ensures all exceptions are caught and returned in a consistent, clean JSON format for the frontend.
+### 1. Task Categorization
+- **Choice**: **User-Defined Dynamic Categories**.
+- **Justification**: Unlike fixed enums (e.g., "Work," "Personal"), dynamic categories allow users to tailor the system to their unique workflows. By creating a dedicated `Category` model, we enable powerful filtering and organization that can scale as the user's needs grow.
+- **Implementation**: Managed as a separate MongoDB collection with a `userId` field to ensure isolation and privacy.
+
+### 2. Tag Management
+- **Choice**: **Free-form Text Tags (Array Implementation)**.
+- **Justification**: Tags are inherently fluid. Using a string array within the `Task` document allows for lightning-fast tagging without the overhead of relational join tables. It supports complex queries like "find tasks that have *all* of these specific tags" using MongoDB’s `$all` operator.
+- **Implementation**: Stored directly on the Task document for performance, validated via Joi to ensure trimming and consistency.
+
+### 3. Reminder Scheduling
+- **Choice**: **Agenda.js (MongoDB-backed Queue)**.
+- **Justification**: Real-time reminders require persistence. If the server crashes, in-memory timers (`setTimeout`) would be lost. Agenda.js ensures that every reminder is stored in the database and will be processed even after a service restart.
+- **Logic**: Reminders are scheduled **1 hour before** the task's `dueDate`. The system intelligently cancels and reschedules jobs if the `dueDate` is updated or the task is completed early.
+
+### 4. Webhook Retry Logic
+- **Choice**: **Exponential Backoff Strategy**.
+- **Justification**: External services (like analytics webhooks) are notoriously unreliable. A "retry immediately" strategy often fails if the external service is experiencing a short outage.
+- **Strategy**: 
+    - **Max Retries**: 3.
+    - **Backoff**: Wait time doubles after each failure (1s, 2s, 4s).
+    - **Benefit**: This minimizes server load during outages and increases the probability of successful delivery once the recipient service recovers.

@@ -1,309 +1,106 @@
-# Task Management API - Detailed Documentation
+# Task Management API: Detailed Documentation
+
+This document provides a comprehensive technical reference for all available API endpoints, authentication mechanisms, and background service logic.
 
 **Base URL**: `http://localhost:5000`
 
 ---
 
-## 1. Authentication Endpoints
+## 1. Authentication
 
-### Register a User
-- **URL:** `/api/auth/register`
-- **Method:** `POST`
-- **Auth required:** No
-- **Description:** Creates a new user account.
+Authentication is handled via **JSON Web Tokens (JWT)**.
+1.  **Register/Login** to obtain a token.
+2.  Include the token in the `Authorization` header for all protected requests:
+    `Authorization: Bearer <your_jwt_token>`
 
-**Request Body:**
-```json
-{
-  "email": "alice@example.com",
-  "password": "secretpassword123"
-}
-```
-
-**Success Response (201 Created):**
-```json
-{
-  "message": "User registered successfully",
-  "user": {
-    "id": 1,
-    "email": "alice@example.com"
+### Register User
+- **Endpoint**: `POST /api/auth/register`
+- **Body**:
+  ```json
+  {
+    "email": "user@example.com",
+    "password": "strongpassword123"
   }
-}
-```
+  ```
+- **Response (201)**: `{ "status": "success", "message": "User registered", "data": { "user": { "id": 1, "email": "..." } } }`
 
-### Log In
-- **URL:** `/api/auth/login`
-- **Method:** `POST`
-- **Auth required:** No
-- **Description:** Authenticates a user and returns a JWT token.
-
-**Request Body:**
-```json
-{
-  "email": "alice@example.com",
-  "password": "secretpassword123"
-}
-```
-
-**Success Response (200 OK):**
-```json
-{
-  "message": "Logged in successfully",
-  "token": "eyJhbGciOiJIUzI1NiIsInR..."
-}
-```
-
-### Get Profile
-- **URL:** `/api/auth/profile`
-- **Method:** `GET`
-- **Auth required:** Yes (Bearer Token)
-- **Description:** Retrieves the authenticated user's details.
-
-**Headers:**
-```http
-Authorization: Bearer <your_jwt_token>
-```
-
-**Success Response (200 OK):**
-```json
-{
-  "id": 1,
-  "email": "alice@example.com"
-}
-```
+### Login
+- **Endpoint**: `POST /api/auth/login`
+- **Body**: `{ "email": "...", "password": "..." }`
+- **Response (200)**: `{ "status": "success", "token": "..." }`
 
 ---
 
-## 2. Task Endpoints
-
-*Note: All task endpoints require the `Authorization: Bearer <your_jwt_token>` header.*
+## 2. Task Management
 
 ### Create Task
-- **URL:** `/api/tasks`
-- **Method:** `POST`
-- **Description:** Creates a new task for the authenticated user.
-
-**Request Body:**
-```json
-{
-  "title": "Buy groceries",
-  "description": "Milk, eggs, bread",
-  "dueDate": "2025-12-31",
-  "status": "pending",
-  "category": "661f1c2e8a1b2c3d4e5f6789",
-  "tags": ["Work", "Urgent"]
-}
-```
-
-**Success Response (201 Created):**
-```json
-{
-  "message": "Task created successfully",
-  "task": {
-    "_id": "661f1c2e8a1b2c3d4e5f6789",
-    "title": "Buy groceries",
-    "description": "Milk, eggs, bread",
-    "dueDate": "2025-12-31T00:00:00.000Z",
+- **Endpoint**: `POST /api/tasks`
+- **Body**:
+  ```json
+  {
+    "title": "Fix bug #104",
+    "description": "Critical error in login flow",
+    "dueDate": "2024-05-20T10:00:00Z",
     "status": "pending",
     "category": "661f1c2e8a1b2c3d4e5f6789",
-    "tags": ["Work", "Urgent"],
-    "userId": 1,
-    "createdAt": "2024-04-18T10:00:00.000Z",
-    "updatedAt": "2024-04-18T10:00:00.000Z"
+    "tags": ["Bug", "High Priority"]
   }
-}
-```
-
-### Get All Tasks
-- **URL:** `/api/tasks`
-- **Method:** `GET`
-- **Description:** Retrieves all tasks belonging to the current user. Filters are supported via query parameters.
-- **Query Parameters (Optional):**
-  - `?category=<categoryId>` - Filter tasks by category ID.
-  - `?tags=urgent,work` - Filter tasks that encompass all specified tags.
-
-**Success Response (200 OK):**
-```json
-{
-  "tasks": [
-    {
-      "_id": "661f1c2e8a1b2c3d4e5f6789",
-      "title": "Buy groceries",
-      "status": "pending",
-      "userId": 1
-    }
-  ]
-}
-```
-
-### Category Endpoints
-
-#### Create Category
-- **URL:** `/api/categories`
-- **Method:** `POST`
-- **Description:** Adds a new category for the authenticated user.
-
-**Request Body:**
-```json
-{
-  "name": "Work"
-}
-```
-
-#### Get Categories
-- **URL:** `/api/categories`
-- **Method:** `GET`
-- **Description:** Retrieves all categories belonging to the authenticated user.
-
-#### Update Category
-- **URL:** `/api/categories/:id`
-- **Method:** `PATCH`
-- **Description:** Rename a category.
-
-#### Delete Category
-- **URL:** `/api/categories/:id`
-- **Method:** `DELETE`
-- **Description:** Deletes a category owned by the authenticated user.
-
-### Tag Endpoints
-
-#### Create Tag
-- **URL:** `/api/tags`
-- **Method:** `POST`
-- **Description:** Creates a free-form tag for the authenticated user.
-
-**Request Body:**
-```json
-{
-  "name": "Urgent"
-}
-```
-
-#### Get Tags
-- **URL:** `/api/tags`
-- **Method:** `GET`
-- **Description:** Retrieves all tags belonging to the authenticated user.
-
-#### Update Tag
-- **URL:** `/api/tags/:id`
-- **Method:** `PATCH`
-- **Description:** Rename an existing tag.
-
-#### Delete Tag
-- **URL:** `/api/tags/:id`
-- **Method:** `DELETE`
-- **Description:** Deletes a tag owned by the authenticated user.
-
-### Webhook Receiver
-- **URL:** `/api/webhook/receive`
-- **Method:** `POST`
-- **Description:** Simulated external analytics webhook endpoint. The API will send completed task payloads here when `WEBHOOK_URL` is configured to point at this receiver.
-
-**Request Body:**
-```json
-{
-  "id": "661f1c2e8a1b2c3d4e5f6789",
-  "title": "Buy groceries",
-  "completionDate": "2024-04-18T11:00:00.000Z",
-  "userId": 1
-}
-```
-
-### Get Single Task
-- **URL:** `/api/tasks/:id`
-- **Method:** `GET`
-- **Description:** Retrieves a specific task by its MongoDB ObjectId.
-
-**Success Response (200 OK):**
-```json
-{
-  "task": {
-    "_id": "661f1c2e8a1b2c3d4e5f6789",
-    "title": "Buy groceries",
-    "status": "pending"
-  }
-}
-```
+  ```
+- **Logic**: Schedules a **Reminder Job** if `dueDate` is provided. If `status` is `completed`, triggers a **Webhook Job**.
 
 ### Update Task
-- **URL:** `/api/tasks/:id`
-- **Method:** `PATCH`
-- **Description:** Partially updates an existing task. You only need to send the fields you want to change.
+- **Endpoint**: `PATCH /api/tasks/:id`
+- **Body**: Partial updates allowed (e.g., `{ "status": "completed" }`).
+- **Logic**: 
+  - If `dueDate` changes: Old reminder cancelled, new one scheduled.
+  - If `status` becomes `completed`: Triggers Webhook delivery.
 
-**Request Body:**
-```json
-{
-  "status": "completed"
-}
-```
+### List Tasks (with Filtering)
+- **Endpoint**: `GET /api/tasks`
+- **Query Parameters**:
+  - `category`: Filter by Category ID.
+  - `tags`: Comma-separated list (e.g., `?tags=Urgent,Work`). Matches tasks containing *all* listed tags.
 
-**Success Response (200 OK):**
-```json
-{
-  "message": "Task updated successfully",
-  "task": {
-    "_id": "661f1c2e8a1b2c3d4e5f6789",
-    "title": "Buy groceries",
-    "status": "completed"
+---
+
+## 3. Categories & Tags
+
+### Categories
+- `POST /api/categories`: `{ "name": "Work" }`
+- `GET /api/categories`: Returns all categories.
+- `PATCH /api/categories/:id`: `{ "name": "New Name" }`
+- `DELETE /api/categories/:id`: Removes the category.
+
+### Tags
+- `POST /api/tags`: `{ "name": "Urgent" }`
+- `GET /api/tags`: Returns all unique tags created by the user.
+
+---
+
+## 4. Background Job Logic
+
+### Task Reminders (Agenda.js)
+- **Lead Time**: 1 Hour.
+- **Behavior**: If a task has a `dueDate`, a job is scheduled for exactly 60 minutes before that time.
+- **Notification**: The system currently logs the notification to the console and `reminders.log`, and sends a POST request to `REMINDER_WEBHOOK_URL` if configured.
+
+### Webhook & Retry Logic
+- **Trigger**: Any task status change to `completed`.
+- **Payload**:
+  ```json
+  {
+    "id": "task_id",
+    "title": "task_title",
+    "completionDate": "timestamp",
+    "userId": 1
   }
-}
-```
-
-### Delete Task
-- **URL:** `/api/tasks/:id`
-- **Method:** `DELETE`
-- **Description:** Deletes a task.
-
-**Success Response (200 OK):**
-```json
-{
-  "message": "Task deleted successfully"
-}
-```
-
----
-**Common Error Responses:**
-- `400 Bad Request`: When required fields are missing or invalid (Joi validation error).
-- `401 Unauthorized`: When the Bearer token is missing, expired, or invalid.
-- `403 Forbidden`: When you try to access or modify a task that belongs to another user ID.
-- `404 Not Found`: When the requested resource does not exist.
+  ```
+- **Retry Strategy**: 
+  - **Count**: 3 Retries.
+  - **Backoff**: Exponential (Internal 1s, 2s, 4s).
+  - **Cleanup**: Jobs that exceed max retries are logged as failures for manual audit.
 
 ---
 
-## 3. Category Endpoints
-
-*Note: All category endpoints require the `Authorization: Bearer <your_jwt_token>` header.*
-
-### Create Category
-- **URL:** `/api/categories`
-- **Method:** `POST`
-- **Description:** Creates a new category for the authenticated user.
-
-**Request Body:**
-```json
-{
-  "name": "Work Projects"
-}
-```
-
-### Get All Categories
-- **URL:** `/api/categories`
-- **Method:** `GET`
-- **Description:** Retrieves all categories associated with the current user.
-
-### Update Category
-- **URL:** `/api/categories/:id`
-- **Method:** `PATCH`
-- **Description:** Edits the name of an existing category.
-
-### Delete Category
-- **URL:** `/api/categories/:id`
-- **Method:** `DELETE`
-- **Description:** Deletes a specific category.
-
----
-
-## 4. Background Services (Webhooks & Scheduling)
-
-- **Reminders Schedule:** The platform creates a scheduled job whenever a task receives a `dueDate`. One hour prior to expiration, a server-side notification trigger prints reminder context in the terminal log arrays.
-- **Completion Webhooks:** Tasks achieving `status=completed` transmit their payload to a simulated external server endpoint. This uses Node queuing (Agenda) with integrated retry mechanisms upon HTTP 5xx failures.
+## 5. Webhook Testing Receiver
+A built-in dummy receiver is available at `POST /api/webhook/receive` to verify that your scheduled webhooks are firing correctly. It simply logs the incoming payload.
